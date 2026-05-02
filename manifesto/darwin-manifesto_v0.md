@@ -2098,7 +2098,7 @@ The investors collectively vote to decide if the Darwin should pivot its strateg
 
 The Darwin architecture is not merely a software platform; it is a blueprint for a new digital ecosystem. By fusing serverless compute, large language models, deterministic API guardrails, and cryptographic financial rails, we transition AI from passive conversational tools into autonomous economic agents.
 
-To turn this whitepaper into a production reality, the engineering and rollout must follow a strict, mathematically sound roadmap, ensuring safety and scalability at every step.
+To turn this manifesto into a production reality, the engineering and rollout must follow a strict, mathematically sound roadmap, ensuring safety and scalability at every step.
 
 ### **13.1 The Darwin Roadmap** {#13.1-the-darwin-roadmap}
 

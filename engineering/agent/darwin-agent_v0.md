@@ -114,7 +114,8 @@ darwin-agent/
 │
 ├── config.py                       # pydantic-settings — reads env vars injected by Modal
 ├── modal_app.py                    # Modal @app.function() entrypoint — the boot sequence
-└── requirements.txt
+├── pyproject.toml                  # dependency ranges (PEP 621)
+└── uv.lock                         # pinned installs for reproducible Modal builds
 ```
 
 ---
@@ -129,13 +130,20 @@ git submodule add https://github.com/NousResearch/hermes-function-calling hermes
 git submodule update --init --recursive
 ```
 
-The `modal_app.py` installs Hermes as a local package during the Modal image build:
+The `modal_app.py` installs dependencies with **uv** during the Modal image build, then installs Hermes from a clone (same pattern as the submodule checkout in CI):
 
 ```python
 image = (
     modal.Image.debian_slim(python_version="3.12")
-    .pip_install_from_requirements("requirements.txt")
-    .run_commands("pip install -e /root/hermes-core")   # editable install of submodule
+    .apt_install(["git", "curl"])
+    .run_commands("curl -Ls https://astral.sh/uv/install.sh | sh")
+    .env({"PATH": "/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"})
+    .copy_local_file("pyproject.toml", "/root/pyproject.toml")
+    .run_commands("uv pip install --system -r /root/pyproject.toml")
+    .run_commands(
+        "git clone https://github.com/NousResearch/hermes-function-calling /root/hermes-core",
+        "uv pip install --system -e /root/hermes-core",
+    )
 )
 ```
 
@@ -169,8 +177,15 @@ from tracing.langsmith import configure_tracing
 # --- Modal image definition ---
 image = (
     modal.Image.debian_slim(python_version="3.12")
-    .pip_install_from_requirements("requirements.txt")
-    .run_commands("pip install -e /root/hermes-core")
+    .apt_install(["git", "curl"])
+    .run_commands("curl -Ls https://astral.sh/uv/install.sh | sh")
+    .env({"PATH": "/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"})
+    .copy_local_file("pyproject.toml", "/root/pyproject.toml")
+    .run_commands("uv pip install --system -r /root/pyproject.toml")
+    .run_commands(
+        "git clone https://github.com/NousResearch/hermes-function-calling /root/hermes-core",
+        "uv pip install --system -e /root/hermes-core",
+    )
 )
 
 app = modal.App("darwin-agent", image=image)
@@ -1916,12 +1931,14 @@ If an injection compromises the agent's reasoning in session N, the infection is
 ```python
 image = (
     modal.Image.debian_slim(python_version="3.12")
-    .apt_install(["git"])
-    .pip_install_from_requirements("requirements.txt")
+    .apt_install(["git", "curl"])
+    .run_commands("curl -Ls https://astral.sh/uv/install.sh | sh")
+    .env({"PATH": "/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"})
+    .copy_local_file("pyproject.toml", "/root/pyproject.toml")
+    .run_commands("uv pip install --system -r /root/pyproject.toml")
     .run_commands(
-        # Install Hermes as a local package from the submodule
         "git clone https://github.com/NousResearch/hermes-function-calling /root/hermes-core",
-        "pip install -e /root/hermes-core",
+        "uv pip install --system -e /root/hermes-core",
     )
     .env({
         "PYTHONUNBUFFERED": "1",
@@ -2031,32 +2048,6 @@ Key scenarios:
 
 ---
 
-## Appendix: `requirements.txt`
+## Appendix: Python dependencies (`pyproject.toml` / `uv.lock`)
 
-```
-# Core
-modal>=0.64.0
-httpx>=0.27.0
-pydantic>=2.7.0
-pydantic-settings>=2.3.0
-
-# LLM providers
-anthropic>=0.28.0
-openai>=1.35.0
-
-# Tracing
-langsmith>=0.1.77
-opentelemetry-api>=1.24.0
-opentelemetry-sdk>=1.24.0
-
-# Database
-# SQLite is built into Python — no extra dependency needed
-
-# Redis (heartbeat and kill signal)
-redis>=5.0.0
-
-# Utilities
-jinja2>=3.1.4     # working_memory template rendering
-psutil>=5.9.8     # memory usage in heartbeat
-python-jose>=3.3.0  # JWT minting/verification
-```
+Dependency ranges live in **`pyproject.toml`** under `[project].dependencies`. **`uv.lock`** pins exact releases for reproducible installs in CI and in the Modal image (`uv pip install --system -r /root/pyproject.toml`). Hermes is installed separately from the git clone with `uv pip install --system -e /root/hermes-core`; locally, use the **`hermes-core`** submodule at the same path instead of cloning inside the image when iterating outside Modal.

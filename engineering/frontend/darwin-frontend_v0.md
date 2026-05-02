@@ -222,7 +222,7 @@ export default defineNuxtConfig({
 
   supabase: {
     url: process.env.SUPABASE_URL,
-    key: process.env.SUPABASE_ANON_KEY,
+    key: process.env.SUPABASE_PUBLISHABLE_KEY,
     redirectOptions: {
       login: '/login',
       callback: '/dashboard',
@@ -2042,9 +2042,9 @@ Environment variables are set in the Vercel dashboard and injected at build time
 ## 14. Environment Variables
 
 ```bash
-# Supabase (client-side — public)
+# Supabase (client-side — publishable key)
 SUPABASE_URL=https://xxx.supabase.co
-SUPABASE_ANON_KEY=...               # safe to expose — RLS enforces access control
+SUPABASE_PUBLISHABLE_KEY=...        # safe to expose — RLS enforces access control
 
 # Backend proxy (server-side — never exposed to browser)
 BACKEND_URL=https://darwin-backend.railway.app
@@ -2054,7 +2054,7 @@ APP_URL=https://app.darwin.ai
 NODE_ENV=production
 ```
 
-The `SUPABASE_ANON_KEY` is safe to expose client-side — it only allows operations that pass Row Level Security policies, and all user data is gated behind auth.uid() = user_id policies.
+The `SUPABASE_PUBLISHABLE_KEY` is safe to expose client-side — it only allows operations that pass Row Level Security policies, and all user data is gated behind auth.uid() = user_id policies.
 
 The `BACKEND_URL` is server-side only — it never reaches the browser, preventing direct API access without going through Nuxt's server proxy.
 

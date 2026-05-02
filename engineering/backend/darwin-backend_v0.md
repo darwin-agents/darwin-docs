@@ -1934,13 +1934,15 @@ Railway service: darwin-celery-beat (cron scheduler)
 ### 13.2 Dockerfile
 
 ```dockerfile
+# syntax=docker/dockerfile:1
 FROM python:3.12-slim
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
 COPY . .
 EXPOSE 8000
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
 ```
 
 ---
@@ -1950,7 +1952,7 @@ CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```bash
 # Supabase
 SUPABASE_URL=https://xxx.supabase.co
-SUPABASE_ANON_KEY=...
+SUPABASE_SECRET_KEY=...            # publishable API key (same class as legacy “anon”) — keep on server only
 SUPABASE_SERVICE_ROLE_KEY=...      # used for server-to-server ops bypassing RLS
 SUPABASE_JWT_SECRET=...            # for validating human JWTs
 

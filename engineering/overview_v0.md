@@ -64,6 +64,8 @@ Modal Volume      (persistent SQLite — agent memory)
 
 **Key rule:** The frontend only ever talks to the backend. The backend is the only service that can talk to Modal. The agent container has no inbound routes — it only makes outbound calls to the backend's `/finance` and `/telemetry` endpoints, authenticated with short-lived JWTs.
 
+**Diagram:** [Architecture overview (SVG)](./arch-diagram_v0.svg) — component map for Phase 1.
+
 ---
 
 ## 3. The Agent (darwin-agent)
@@ -496,7 +498,7 @@ darwin-backend/             # Render/Railway — always-on
 │   ├── sessions.py
 │   └── security.py
 ├── schemas/                # Pydantic models shared with darwin-agent
-├── tasks/                  # Celery workers (webhook processing)
+├── workers/                # Celery workers (webhook processing)
 ├── db/                     # Supabase client + migration scripts
 └── main.py
 

@@ -1,4 +1,5 @@
 # Darwin — Per-Neuron LLM Model Selection
+
 > **Feature spec v0.1** · Affects: `darwin-agent`, `darwin-backend`, `darwin-frontend`
 
 ---
@@ -6,6 +7,10 @@
 ## 1. Overview
 
 Darwin agents can autonomously select a different LLM model for each cognitive moment — each `THOUGHT` event on the main trunk and each neuron they spawn. This decision is made at runtime by the agent itself, based on task complexity and metabolic cost. Every model choice is surfaced live on the Infinite Canvas so the human creator can observe the agent's cost-intelligence tradeoffs in real time.
+
+### Canvas mockup
+
+![Darwin Infinite Canvas mockup — per-neuron model tags and inspector](assets/darwin_model_selector_canvas.png)
 
 ---
 
@@ -28,13 +33,13 @@ The Hermes framework's system prompt (`SOUL.md`) should include a model routing 
 
 Before every LLM call, select the cheapest model capable of the task:
 
-| Task type                                      | Default model          |
-|------------------------------------------------|------------------------|
-| Repetitive extraction, simple classification   | claude-haiku-4-5       |
-| General reasoning, planning, tool calls        | claude-sonnet-4-6      |
-| Complex strategy, multi-step synthesis         | claude-opus-4-6        |
-| Vision-heavy tasks (JS apps, complex UIs)      | gpt-4o                 |
-| Fast vision checks, screenshot classification  | gpt-4o-mini            |
+| Task type                                     | Default model     |
+| --------------------------------------------- | ----------------- |
+| Repetitive extraction, simple classification  | claude-haiku-4-5  |
+| General reasoning, planning, tool calls       | claude-sonnet-4-6 |
+| Complex strategy, multi-step synthesis        | claude-opus-4-6   |
+| Vision-heavy tasks (JS apps, complex UIs)     | gpt-4o            |
+| Fast vision checks, screenshot classification | gpt-4o-mini       |
 
 Always justify model upgrades in your THOUGHT content.
 ```
@@ -120,13 +125,13 @@ if body.event_type == "THOUGHT":
 
 Every `ThoughtNode` renders a model tag directly beneath the brain icon. Tag colour encodes the model family:
 
-| Model family     | Tag class            | Colour                    |
-|------------------|----------------------|---------------------------|
-| `claude-opus`    | `model-opus`         | Blue (`border-sky-500`)   |
-| `claude-sonnet`  | `model-sonnet`       | Violet (`border-violet-500`) |
-| `claude-haiku`   | `model-haiku`        | Green (`border-green-500`) |
-| `gpt-4o`         | `model-gpt4o`        | Teal (`border-teal-500`)  |
-| `gpt-4o-mini`    | `model-gpt4o-mini`   | Amber (`border-amber-500`) |
+| Model family    | Tag class          | Colour                       |
+| --------------- | ------------------ | ---------------------------- |
+| `claude-opus`   | `model-opus`       | Blue (`border-sky-500`)      |
+| `claude-sonnet` | `model-sonnet`     | Violet (`border-violet-500`) |
+| `claude-haiku`  | `model-haiku`      | Green (`border-green-500`)   |
+| `gpt-4o`        | `model-gpt4o`      | Teal (`border-teal-500`)     |
+| `gpt-4o-mini`   | `model-gpt4o-mini` | Amber (`border-amber-500`)   |
 
 ```vue
 <!-- components/canvas/ThoughtNode.vue -->
@@ -143,27 +148,27 @@ Every `ThoughtNode` renders a model tag directly beneath the brain icon. Tag col
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{ event: DarwinEvent; x: number; y: number }>()
-const canvas = useCanvasStore()
+const props = defineProps<{ event: DarwinEvent; x: number; y: number }>();
+const canvas = useCanvasStore();
 
 const shortModel = computed(() => {
-  const m = props.event.payload.model ?? ''
-  if (m.includes('opus'))   return 'opus'
-  if (m.includes('sonnet')) return 'sonnet'
-  if (m.includes('haiku'))  return 'haiku'
-  if (m.includes('4o-mini'))return 'gpt-4o-mini'
-  if (m.includes('4o'))     return 'gpt-4o'
-  return m.split('-')[0]
-})
+  const m = props.event.payload.model ?? "";
+  if (m.includes("opus")) return "opus";
+  if (m.includes("sonnet")) return "sonnet";
+  if (m.includes("haiku")) return "haiku";
+  if (m.includes("4o-mini")) return "gpt-4o-mini";
+  if (m.includes("4o")) return "gpt-4o";
+  return m.split("-")[0];
+});
 
 const modelClass = computed(() => {
-  if (shortModel.value === 'opus')       return 'model-opus'
-  if (shortModel.value === 'sonnet')     return 'model-sonnet'
-  if (shortModel.value === 'haiku')      return 'model-haiku'
-  if (shortModel.value === 'gpt-4o')     return 'model-gpt4o'
-  if (shortModel.value === 'gpt-4o-mini')return 'model-gpt4o-mini'
-  return 'model-unknown'
-})
+  if (shortModel.value === "opus") return "model-opus";
+  if (shortModel.value === "sonnet") return "model-sonnet";
+  if (shortModel.value === "haiku") return "model-haiku";
+  if (shortModel.value === "gpt-4o") return "model-gpt4o";
+  if (shortModel.value === "gpt-4o-mini") return "model-gpt4o-mini";
+  return "model-unknown";
+});
 </script>
 ```
 
@@ -182,17 +187,19 @@ The lane label at the branch point shows the neuron's spawn model. If the neuron
 
 ```typescript
 const spawnModel = computed(() => {
-  const spawnEvent = props.lane.events.find(e => e.event_type === 'NEURON_SPAWNED')
-  return spawnEvent?.payload?.model ?? '—'
-})
+  const spawnEvent = props.lane.events.find(
+    (e) => e.event_type === "NEURON_SPAWNED",
+  );
+  return spawnEvent?.payload?.model ?? "—";
+});
 
 const modelSwitched = computed(() => {
   const models = props.lane.events
-    .filter(e => e.event_type === 'THOUGHT')
-    .map(e => e.payload.model)
-    .filter(Boolean)
-  return new Set(models).size > 1
-})
+    .filter((e) => e.event_type === "THOUGHT")
+    .map((e) => e.payload.model)
+    .filter(Boolean);
+  return new Set(models).size > 1;
+});
 ```
 
 ### 5.3 Mental Replay panel — `<MentalReplayPanel />`
@@ -201,7 +208,7 @@ Add the model field to the existing MIND panel alongside tokens and cost. No lay
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│ Mental Replay — "Thought" (14:32:07)          [✕]   │
+│ Mental Replay — "Thought" (14:32:07)          [✕]    │
 ├──────────────────┬───────────────────────────────────┤
 │  EYES            │  MIND                             │
 │                  │                                   │
@@ -274,21 +281,21 @@ LLM model (trunk default)
 ```typescript
 // Extend ThoughtPayload — model already present, add model_reason
 export interface ThoughtPayload {
-  content: string
-  model: string
-  model_reason?: string        // optional — agent may explain upgrade/downgrade
-  prompt_tokens: number
-  completion_tokens: number
-  latency_ms: int
+  content: string;
+  model: string;
+  model_reason?: string; // optional — agent may explain upgrade/downgrade
+  prompt_tokens: number;
+  completion_tokens: number;
+  latency_ms: int;
 }
 
 // Extend NeuronSpawnedPayload
 export interface NeuronSpawnedPayload {
-  neuron_id: string
-  task: string
-  parent_event_id: string
-  model: string                // required from this spec onwards
-  model_reason?: string
+  neuron_id: string;
+  task: string;
+  parent_event_id: string;
+  model: string; // required from this spec onwards
+  model_reason?: string;
 }
 ```
 
@@ -362,16 +369,16 @@ theme: {
 
 ## 9. Summary of changes
 
-| Layer           | File / Component                  | Change                                              |
-|-----------------|-----------------------------------|-----------------------------------------------------|
-| `darwin-agent`  | `SOUL.md`                         | Add model routing policy                            |
-| `darwin-agent`  | Neuron spawn logic                | Add `model` + `model_reason` to `NEURON_SPAWNED`    |
-| `darwin-backend`| `schemas/canvas.py`               | Add `model`, `model_reason` to `NeuronSpawnedPayload` |
-| `darwin-backend`| `routers/telemetry.py`            | Validate `model` present on all `THOUGHT` events    |
-| `darwin-frontend`| `components/canvas/ThoughtNode.vue` | Render model tag beneath node                    |
-| `darwin-frontend`| `components/canvas/NeuralThread.vue` | Show spawn model in lane header + `↔` indicator |
-| `darwin-frontend`| `components/panels/MentalReplayPanel.vue` | Add model field to MIND stat block        |
-| `darwin-frontend`| `components/panels/NeuronInspectorCard.vue` | Model tag + model switches list          |
-| `darwin-frontend`| `components/spawn/SpawnForm.vue`  | Add note about autonomous model override            |
-| `darwin-frontend`| `types/events.ts`                 | Add `model_reason` to `ThoughtPayload`, `NeuronSpawnedPayload` |
-| `darwin-frontend`| `tailwind.config.ts`              | Add model colour tokens                             |
+| Layer             | File / Component                            | Change                                                         |
+| ----------------- | ------------------------------------------- | -------------------------------------------------------------- |
+| `darwin-agent`    | `SOUL.md`                                   | Add model routing policy                                       |
+| `darwin-agent`    | Neuron spawn logic                          | Add `model` + `model_reason` to `NEURON_SPAWNED`               |
+| `darwin-backend`  | `schemas/canvas.py`                         | Add `model`, `model_reason` to `NeuronSpawnedPayload`          |
+| `darwin-backend`  | `routers/telemetry.py`                      | Validate `model` present on all `THOUGHT` events               |
+| `darwin-frontend` | `components/canvas/ThoughtNode.vue`         | Render model tag beneath node                                  |
+| `darwin-frontend` | `components/canvas/NeuralThread.vue`        | Show spawn model in lane header + `↔` indicator                |
+| `darwin-frontend` | `components/panels/MentalReplayPanel.vue`   | Add model field to MIND stat block                             |
+| `darwin-frontend` | `components/panels/NeuronInspectorCard.vue` | Model tag + model switches list                                |
+| `darwin-frontend` | `components/spawn/SpawnForm.vue`            | Add note about autonomous model override                       |
+| `darwin-frontend` | `types/events.ts`                           | Add `model_reason` to `ThoughtPayload`, `NeuronSpawnedPayload` |
+| `darwin-frontend` | `tailwind.config.ts`                        | Add model colour tokens                                        |

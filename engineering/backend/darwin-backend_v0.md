@@ -135,7 +135,7 @@ darwin-backend/
 │   ├── ledger_service.py      # Balance reads/writes with row locks
 │   ├── vcc_service.py         # VCC encrypt/decrypt, JIT injection
 │   ├── telegram_service.py    # Telegram Bot API calls
-│   ├── langsmith_service.py   # LangSmith/Phoenix trace fetching
+│   ├── langfuse_service.py    # Langfuse REST — Mental Replay trace fetch (matches Hermes plugin)
 │   ├── canvas_service.py      # Build timeline event payloads for WebSocket push
 │   └── intent_scan_service.py # Pre-flight classifier call
 │
@@ -659,7 +659,7 @@ Lightweight FSM state check. Used by the frontend to poll current state and burn
 
 #### `GET /darwins/{id}/logs`
 
-Fetch the structured thought log (LangSmith/Phoenix trace) for a specific session. Used by the "Mental Replay" side panel on the canvas.
+Fetch the structured thought log (Langfuse observations) for a specific session. Used by the "Mental Replay" side panel on the canvas. The backend resolves Langfuse **session id** as `{darwin_id}::{session_id}` so it lines up with Hermes `langfuse.session_name` in the agent config.
 
 **Query params:** `session_id` (required), `neuron_id` (optional — filter to a specific sub-agent lane)
 
@@ -686,7 +686,7 @@ Fetch the structured thought log (LangSmith/Phoenix trace) for a specific sessio
 }
 ```
 
-This data is fetched from LangSmith/Phoenix and cached in Redis for 5 minutes.
+This data is fetched from the Langfuse public API (Basic auth: public + secret project keys) and cached in Redis for 5 minutes.
 
 ---
 
@@ -1974,9 +1974,10 @@ TELEGRAM_ADMIN_CHAT_ID=...         # for platform-level admin alerts
 # Stripe (Phase 1: webhook verification only)
 STRIPE_WEBHOOK_SECRET=...
 
-# LangSmith / Arize Phoenix (thought log fetching)
-LANGSMITH_API_KEY=...
-LANGCHAIN_PROJECT=darwin-production
+# Langfuse (Mental Replay — same keys as Hermes `HERMES_LANGFUSE_*` project)
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_HOST=https://cloud.langfuse.com
 
 # Browserbase
 BROWSERBASE_API_KEY=...

@@ -977,7 +977,7 @@ What we get out of the box:
 - `read_file` payloads auto-summarized so a giant file read doesn't blow out the trace
 - Fail-open if Langfuse is unreachable — never blocks the agent
 
-The "Mental Replay" panel in `darwin-frontend` queries Langfuse's API directly with a public key, gets the trace tree for a session, and renders the per-node prompt + response + cost. Zero work on our side beyond enabling the plugin.
+The "Mental Replay" panel in `darwin-frontend` calls `GET /api/v1/darwins/{id}/logs` on **darwin-backend**, which reads observations from the Langfuse public API (same `darwin_id::session_id` as `langfuse.session_name` in Hermes). The UI renders the per-node prompt + response + cost. Beyond enabling the Hermes plugin, set `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` (and optional `LANGFUSE_HOST`) on the backend.
 
 (LangSmith is no longer in the stack.)
 
